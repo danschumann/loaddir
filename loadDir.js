@@ -7,28 +7,27 @@
   fs = require('fs');
 
   module.exports = loadDir = function(options) {
-    var args, as_object, binary, black_list, compile, compileTo, destination, extension, filenamesOnly, freshen, path, priority, recursive, relativeDir, relaunchApp, reprocess, requireFiles, white_list, withCompiled, _ref, _ref1, _ref2, _xp;
+    var args, as_object, binary, black_list, callback, compile, destination, extension, filenamesOnly, freshen, on_change, path, priority, recursive, relativePath, reprocess, requireFiles, white_list, _ref, _ref1, _xp;
 
     if (options == null) {
       options = {};
     }
-    white_list = options.white_list, black_list = options.black_list, relaunchApp = options.relaunchApp, destination = options.destination, compileTo = options.compileTo, compile = options.compile, extension = options.extension, relativeDir = options.relativeDir, withCompiled = options.withCompiled, requireFiles = options.requireFiles, filenamesOnly = options.filenamesOnly, priority = options.priority, freshen = options.freshen, reprocess = options.reprocess, binary = options.binary;
+    white_list = options.white_list, black_list = options.black_list, destination = options.destination, compile = options.compile, extension = options.extension, relativePath = options.relativePath, callback = options.callback, requireFiles = options.requireFiles, filenamesOnly = options.filenamesOnly, priority = options.priority, freshen = options.freshen, reprocess = options.reprocess, binary = options.binary;
     as_object = (_ref = options.as_object) != null ? _ref : false;
     recursive = (_ref1 = options.recursive) != null ? _ref1 : true;
-    path = (_ref2 = options.path) != null ? _ref2 : '';
-    if (destination == null) {
-      destination = compileTo;
-    }
+    path = options.path;
+    on_change = options.on_change;
+    destination = options.destination;
     args = arguments[0];
     if (recursive == null) {
       recursive = true;
     }
-    if (relativeDir == null) {
-      relativeDir = '';
+    if (relativePath == null) {
+      relativePath = '';
     }
     _xp = {};
     _.map(fs.readdirSync(path), function(fileName) {
-      var addToObject, compiled, deepContents, er, fullPath, image_formats, process, readFile, recompile, trimmedFN, _changedFileName, _ref3, _writeDir,
+      var addToObject, compiled, deepContents, er, fullPath, image_formats, process, readFile, recompile, trimmedFN, _changedFileName, _ref2, _writeDir,
         _this = this;
 
       if (white_list) {
@@ -52,22 +51,22 @@
         if (recursive) {
           deepContents = loadDir(_.extend(_.clone(args), {
             path: fullPath,
-            relativeDir: (relativeDir != null ? relativeDir : '') + fileName + '/'
+            relativePath: (relativePath != null ? relativePath : '') + fileName + '/'
           }));
           if (as_object) {
-            _xp[trimmedFN] = _.extend((_ref3 = _xp[trimmedFN]) != null ? _ref3 : {}, deepContents);
+            _xp[trimmedFN] = _.extend((_ref2 = _xp[trimmedFN]) != null ? _ref2 : {}, deepContents);
           } else {
             _xp = _.extend(deepContents, _xp);
           }
         }
         return;
       }
-      if (relaunchApp || freshen || reprocess) {
+      if (on_change || freshen || reprocess) {
         _.defer(function() {
           return fs.watch(fullPath, function() {
             return _.delay(function() {
-              if (relaunchApp) {
-                restartExpress();
+              if (on_change === 'restart') {
+                loadDir.restartServer();
               }
               console.log('recompilin');
               if (reprocess) {
@@ -106,19 +105,19 @@
         binary = (_(image_formats)).include(fullPath.extension().toLowerCase()) ? 'binary' : void 0;
       }
       (readFile = function() {
-        var contents, _ref4;
+        var contents, _ref3;
 
         contents = fs.readFileSync(fullPath, binary).toString();
-        return compiled = (_ref4 = typeof compile === "function" ? compile(contents) : void 0) != null ? _ref4 : contents;
+        return compiled = (_ref3 = typeof compile === "function" ? compile(contents) : void 0) != null ? _ref3 : contents;
       })();
-      if (_.isFunction(withCompiled)) {
-        (process = function(again) {
-          return compiled = withCompiled(_.extend(_.clone(args), {
+      if (_.isFunction(callback)) {
+        (process = function(reloaded) {
+          return compiled = callback(_.extend(_.clone(args), {
             compiled: compiled,
-            relativeDir: relativeDir,
+            relativePath: relativePath,
             fileName: fileName,
             fullPath: fullPath,
-            again: again
+            reloaded: reloaded
           }));
         })(false);
       }
@@ -132,7 +131,7 @@
           });
         }
       }
-      _writeDir = destination + '/' + (relativeDir != null ? relativeDir : '');
+      _writeDir = destination + '/' + (relativePath != null ? relativePath : '');
       _changedFileName = _writeDir + trimmedFN + '.' + extension;
       if (destination != null) {
         try {
@@ -147,13 +146,19 @@
       }
       return (addToObject = function() {
         if (as_object != null) {
-          return _xp[(relativeDir != null ? relativeDir : '') + fileName] = compiled;
+          return _xp[(relativePath != null ? relativePath : '') + fileName] = compiled;
         } else {
           return _xp[trimmedFN] = _.extend(compiled, _xp[trimmedFN]);
         }
       })();
     });
     return _xp;
+  };
+
+  loadDir.restartServer = function() {
+    fs.writeFileSync('loadDir_tmp_restart.txt', Math.random());
+    require('loadDir_tmp_restart.txt');
+    return fs.writeFileSync('loadDir_tmp_restart.txt', Math.random());
   };
 
 }).call(this);

@@ -21,7 +21,6 @@ __Keys below are in the format__
 
 
 `as_object : false(boolean)`
-
 _It is prettier for back end templates to call templates as objects sometimes._
 If this is true, templates will be like `templates.directory.filename()`, instead of `templates['directory/filename']()`.
 
@@ -32,5 +31,32 @@ set to false for only 1 layer of scraping
 `skip : [](array)`
 include file and folder names as strings to skip
 
-`path : ''(string)` required
+`path : undefined(string)` __required__
 the path of the directory to load
+
+`on_change : undefined(string or function)`
+handle what to do when a file changes.  pass `'restart'` to call `loadDir.restartServer()`
+
+`destination : undefined(string)`
+copy the files to this directoy, after formatting them using `compile`
+
+`compile : undefined(function)`
+if defined, it will receive a string of the raw file.  usage: `loadDir({compile: CoffeeScript.compile})`
+
+`callback : undefined(function)`
+do something with what is returned from compile, with all of the options.
+
+`options` are `compiled`, `relativePath`, `fullPath`, `fileName`, `reloaded`
+`loadDir({callback: function(options){
+  if(options.reloaded) console.log('You changed a file that was being watched');
+});`
+
+
+
+INTERNAL NOTES
+==============
+
+`loadDir.restartServer()`
+this is somewhat hacky, used by `loadDir({on_change: 'restart'})`
+it writes a file `loadDir_tmp.txt`,  requires it and then writes it again, so whether you're using forever, supervisor, node-dev, or something else, it should restart the server.
+when loadDir is first loaded, it checks for the file and deletes it, to hopefully keep it from being seen

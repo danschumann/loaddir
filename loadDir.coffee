@@ -2,44 +2,34 @@ _ = require 'underscore'
 fs = require 'fs'
 
 module.exports = loadDir = (options = {}) ->
-  {white_list, black_list, relaunchApp, destination, compileTo, compile, extension, relativeDir, withCompiled, requireFiles, filenamesOnly, priority, freshen, reprocess, binary } = options
+  {white_list, black_list, destination, compile, extension, relativePath, callback, requireFiles, filenamesOnly, priority, freshen, reprocess, binary } = options
 
   # template.directory.filename() vs template['directory/filename']
   as_object = options.as_object ? false
 
   recursive = options.recursive ? true
 
-  path = options.path ? ''
+  path = options.path
 
-  #   relaunchApp
-  #
-  # bool
+  on_change = options.on_change
 
-  #   compileTo --> destination
-  #
-  # '/path/to/output'
-  # bool
+  destination = options.destination
 
-  #
-  #   compile
-  #
-  # bool
-
-  #   withCompiled
+  #   callback
   #
   # callback function
-  # receives {compiled, relativeDir, fileName, fullPath} 
+  # receives {compiled, relativePath, fileName, fullPath} 
   #   as well as all these named input arguments
 
   #   extension
   #
   # 'js' for javascript, 'css' for css, etc
 
-  #   relativeDir
+  #   relativePath
   #
   # an output variable containing the directories scraped into
   # i.e. if full path is '/root/dir1/dir2/file'
-  #  and path is '/root/', then relativeDir is 'dir1/dir2/'
+  #  and path is '/root/', then relativePath is 'dir1/dir2/'
   #  or something like that (not sure on slashes)
   #  TODO: update this comment with accurate slashes
 
@@ -60,20 +50,17 @@ module.exports = loadDir = (options = {}) ->
 
   #   reprocess
   #
-  # whether or not to read the file and run withCompiled again
+  # whether or not to read the file and run callback again
   # if it changes
-  # withCompiled receives an additional reprocess: true named argument
+  # callback receives an additional reprocess: true named argument
   #  so that you know if it's running a 2nd time or not
   # bool
-
-  # depreciations
-  destination ?= compileTo
 
   args = arguments[0]
 
   recursive ?= true
 
-  relativeDir ?= ''
+  relativePath ?= ''
   _xp = {}
 
   _.map fs.readdirSync(path), (fileName)->
@@ -91,19 +78,20 @@ module.exports = loadDir = (options = {}) ->
       if recursive
         deepContents = loadDir _.extend _.clone(args),
             path: fullPath
-            relativeDir: (relativeDir ? '')+fileName+'/'
+            relativePath: (relativePath ? '')+fileName+'/'
         if as_object
           _xp[trimmedFN] = _.extend _xp[trimmedFN] ?{}, deepContents
         else
           _xp = _.extend deepContents, _xp
       return
 
-    if relaunchApp or freshen or reprocess then _.defer =>
+    if on_change or freshen or reprocess then _.defer =>
 
       # without a delay sometimes with long files it won't pick up the entire file
       fs.watch fullPath, => _.delay( =>
 
-        do restartExpress if relaunchApp
+        loadDir.restartServer() if on_change is 'restart'
+
         console.log 'recompilin'
         if reprocess
           console.log 'refreshen'
@@ -133,9 +121,9 @@ module.exports = loadDir = (options = {}) ->
       compiled = compile?(contents) ? contents
 
     # Callback for all args and data
-    if _.isFunction withCompiled
-      do process = (again = false) =>
-        compiled = withCompiled _.extend _.clone(args), {compiled, relativeDir, fileName, fullPath, again}
+    if _.isFunction callback
+      do process = (reloaded = false) =>
+        compiled = callback _.extend _.clone(args), {compiled, relativePath, fileName, fullPath, reloaded}
 
     if requireFiles
       try
@@ -144,7 +132,7 @@ module.exports = loadDir = (options = {}) ->
         _.defer => require fullPath
 
     # Write to dir with new extension
-    _writeDir = destination + '/' + (relativeDir ? '')
+    _writeDir = destination + '/' + (relativePath ? '')
 
     _changedFileName = _writeDir + trimmedFN + '.' + extension
 
@@ -160,8 +148,13 @@ module.exports = loadDir = (options = {}) ->
 
     do addToObject = =>
       if as_object?
-        _xp[(relativeDir ? '') + fileName] = compiled
+        _xp[(relativePath ? '') + fileName] = compiled
       else
         _xp[trimmedFN] = _.extend compiled, _xp[trimmedFN]
 
   _xp
+
+loadDir.restartServer = ->
+  fs.writeFileSync 'loadDir_tmp_restart.txt', Math.random()
+  require 'loadDir_tmp_restart.txt'
+  fs.writeFileSync 'loadDir_tmp_restart.txt', Math.random()

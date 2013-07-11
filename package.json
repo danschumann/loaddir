@@ -1,0 +1,18 @@
+{
+  "author": "Daniel Hastings Schumann",
+  "name": "loadDir",
+  "description": "Asset watching, handling, compiling, and insertion into page for node.js",
+  "version": "0.0.1",
+  "repository": {
+    "url": "https://github.com/danschumann/loadDir"
+  },
+  "main": "./loadDir",
+  "dependencies": {
+    "underscore": ">=1.5.1"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}

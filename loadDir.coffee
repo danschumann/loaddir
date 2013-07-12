@@ -1,8 +1,13 @@
 _ = require 'underscore'
 fs = require 'fs'
+CoffeeScript = require 'coffee-script'
+{extension} = require './string_helper'
+
+# default 
+_to_filename = (fileName, extension) -> return [filename, extension].join('.')
 
 module.exports = loadDir = (options = {}) ->
-  {white_list, black_list, destination, compile, extension, relativePath, callback, requireFiles, filenamesOnly, priority, freshen, reprocess, binary } = options
+  {white_list, black_list, destination, compile, to_filename, relativePath, callback, filenamesOnly, priority, freshen, reprocess, binary } = options
 
   # template.directory.filename() vs template['directory/filename']
   as_object = options.as_object ? false
@@ -15,28 +20,13 @@ module.exports = loadDir = (options = {}) ->
 
   destination = options.destination
 
-  #   callback
-  #
-  # callback function
-  # receives {compiled, relativePath, fileName, fullPath} 
-  #   as well as all these named input arguments
+  compile = options.compile
 
-  #   extension
-  #
-  # 'js' for javascript, 'css' for css, etc
+  callback = options.destination
 
-  #   relativePath
-  #
-  # an output variable containing the directories scraped into
-  # i.e. if full path is '/root/dir1/dir2/file'
-  #  and path is '/root/', then relativePath is 'dir1/dir2/'
-  #  or something like that (not sure on slashes)
-  #  TODO: update this comment with accurate slashes
+  to_filename = options.to_filename || _to_filename
 
-  #   requireFiles
-  #
-  # whether or not to use require on the fullPath
-  # bool
+  requireFiles = options.require || false
 
   #   filenamesOnly
   #
@@ -62,6 +52,9 @@ module.exports = loadDir = (options = {}) ->
 
   relativePath ?= ''
   _xp = {}
+
+  # all paths should be the same -- no ending slash
+  path = path.slice 0, -1 if '/' is _.last path
 
   _.map fs.readdirSync(path), (fileName)->
     if white_list
@@ -103,7 +96,6 @@ module.exports = loadDir = (options = {}) ->
           recompile?()
           addToObject?()
       , 250)
-        
 
     # We break the compiler alot
     console.log 'loadDir 120', fullPath, fileName
@@ -113,8 +105,7 @@ module.exports = loadDir = (options = {}) ->
     return _xp[trimmedFN] = {} if filenamesOnly
 
     image_formats = ['png', 'jpg', 'gif', 'jpeg']
-    extension ?= fullPath.extension()
-    binary ?= if (_ image_formats).include(fullPath.extension().toLowerCase()) then 'binary'
+    binary ?= if (_ image_formats).include(extension(fullPath).toLowerCase()) then 'binary'
 
     do readFile = =>
       contents = fs.readFileSync(fullPath, binary).toString()
@@ -134,9 +125,11 @@ module.exports = loadDir = (options = {}) ->
     # Write to dir with new extension
     _writeDir = destination + '/' + (relativePath ? '')
 
-    _changedFileName = _writeDir + trimmedFN + '.' + extension
+    _changedFileName = _writeDir + to_filename trimmedFN, extension
 
     if destination?
+
+      # we ensure a folder to write to
       try
         fs.lstatSync _writeDir
       catch er
@@ -144,7 +137,6 @@ module.exports = loadDir = (options = {}) ->
 
       do recompile = =>
         fs.writeFileSync _changedFileName, compiled, binary
-        #fs.chownSync _changedFileName, 222, 500
 
     do addToObject = =>
       if as_object?

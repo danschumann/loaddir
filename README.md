@@ -51,7 +51,11 @@ do something with what is returned from compile, with all of the options.
   if(options.reloaded) console.log('You changed a file that was being watched');
 });`
 
+`to_filename : function(filename, extension){return filename + extension}`
+a filter to run file names through so you can change the extension
 
+`require : false(boolean)`
+rather than compiling, this will require the file
 
 INTERNAL NOTES
 ==============
@@ -60,3 +64,5 @@ INTERNAL NOTES
 this is somewhat hacky, used by `loadDir({on_change: 'restart'})`
 it writes a file `loadDir_tmp.txt`,  requires it and then writes it again, so whether you're using forever, supervisor, node-dev, or something else, it should restart the server.
 when loadDir is first loaded, it checks for the file and deletes it, to hopefully keep it from being seen
+
+

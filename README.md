@@ -57,6 +57,12 @@ a filter to run file names through so you can change the extension
 `require : false(boolean)`
 rather than compiling, this will require the file
 
+`black_list : [](array of strings)`
+a list of filenames to halt on
+
+`white_list : [](array of strings)`
+a list of __top level__ files that are to be used exclusively
+
 INTERNAL NOTES
 ==============
 

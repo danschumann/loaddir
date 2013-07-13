@@ -24,9 +24,6 @@ If this is true, templates will be like `templates.directory.filename()`, instea
 `recursive : true(boolean)`
 set to false for only 1 layer of scraping
 
-`skip : [](array)`
-include file and folder names as strings to skip
-
 `path : undefined(string)` __required__
 the path of the directory to load
 

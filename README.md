@@ -3,14 +3,12 @@ loaddir.js
 
 Asset watching, handling, compiling, and insertion into page for node.js
 
-
-If you modify loadDir.coffee, run `coffee -cw loadDir.coffee` to compile and watch. That keeps loadDir.js up to date as you're editing it
-
+To install run `npm install loaddir`
 
 OPTIONS
 =======
 
-All examples assume `templates = loadDir({key: value})`
+All examples assume `templates = loaddir({key: value})`
 
 __Keys below are in the format__
 `key_name : default value(type)`
@@ -28,18 +26,18 @@ set to false for only 1 layer of scraping
 the path of the directory to load
 
 `on_change : undefined(string or function)`
-handle what to do when a file changes.  pass `'restart'` to call `loadDir.restartServer()`
+handle what to do when a file changes.  pass `'restart'` to call `loaddir.restartServer()`
 
 `destination : undefined(string)`
 copy the files to this directoy, after formatting them using `compile`
 
 `compile : undefined(function)`
-if defined, it will receive a string of the raw file.  usage: `loadDir({compile: CoffeeScript.compile})`
+if defined, it will receive a string of the raw file.  usage: `loaddir({compile: CoffeeScript.compile})`
 
 `callback : undefined(function)`
 do something with what is returned from compile, with all of the options.
 `options` are `compiled`, `relativePath`, `fullPath`, `fileName`, `repeat`
-`loadDir({callback: function(options){
+`loaddir({callback: function(options){
   if(options.reloaded) console.log('You changed a file that was being watched');
 });`
 

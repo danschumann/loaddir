@@ -146,10 +146,10 @@ module.exports = loaddir = (options = {}) ->
         fs.writeFileSync _changedFileName, compiled, binary
 
     do addToObject = =>
-      if as_object?
-        output[(relativePath ? '') + formatted_filename] = compiled
-      else
+      if as_object
         output[formatted_filename] = _.extend compiled, output[formatted_filename]
+      else
+        output[(relativePath ? '') + formatted_filename] = compiled
 
   return output
 

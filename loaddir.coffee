@@ -42,7 +42,7 @@ module.exports = loaddir = (options = {}) ->
 
   output = {}
 
-  if _to_ext[0] isnt '.'
+  if _to_ext and _to_ext[0] isnt '.'
     _to_ext = '.' + _to_ext
 
   # strip ending slash for consistency

@@ -1,7 +1,3 @@
-THIS IS UNDER DEVELOPMENT AND SHOULD BE UP IN A COUPLE DAYS
-===========================================================
-i know i should probably make this private
-
 loaddir.js
 ==========
 

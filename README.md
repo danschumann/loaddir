@@ -45,11 +45,13 @@ if defined, it will receive a string of the raw file.  usage: `loadDir({compile:
 
 `callback : undefined(function)`
 do something with what is returned from compile, with all of the options.
-
-`options` are `compiled`, `relativePath`, `fullPath`, `fileName`, `reloaded`
+`options` are `compiled`, `relativePath`, `fullPath`, `fileName`, `repeat`
 `loadDir({callback: function(options){
   if(options.reloaded) console.log('You changed a file that was being watched');
 });`
+
+`repeat_callback : false(boolean)`
+This will cause callback to be called every time the file changes
 
 `to_filename : function(filename, extension){return filename + extension}`
 a filter to run file names through so you can change the extension
@@ -68,7 +70,27 @@ INTERNAL NOTES
 
 `loadDir.restartServer()`
 this is somewhat hacky, used by `loadDir({on_change: 'restart'})`
-it writes a file `loadDir_tmp.txt`,  requires it and then writes it again, so whether you're using forever, supervisor, node-dev, or something else, it should restart the server.
+it writes a file `loadDir_tmp.txt`,  requires it and then writes it again, so whether using forever, supervisor, node-dev, or something else, it should restart the server.
 when loadDir is first loaded, it checks for the file and deletes it, to hopefully keep it from being seen
 
 
+
+
+Some examples
+=============
+
+```javascript
+// load server side templates into object for use: template.index()
+loaddir = require('loaddir');
+jade = require('jade');
+
+templates = loaddir({
+  as_object: true
+  path: __dirname + '/templates'
+  compile: (str) ->
+    jade.compile str
+});
+
+// for use with express?
+app.get('*', function(req, res, next) { res.send(template.my_filename(req)); });
+```

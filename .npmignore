@@ -1,0 +1,4 @@
+loaddir.coffee
+node_modules
+.git
+.gitignore

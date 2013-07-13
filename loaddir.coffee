@@ -4,49 +4,45 @@ child = require 'child_process'
 CoffeeScript = require 'coffee-script'
 {extension, trim_ext} = require './string_helper'
 
-# default 
+# by default, we do not change the extension when copying
 _to_filename = (filename, ext) -> return [filename, ext].join('.')
 
-module.exports = loadDir = (options = {}) ->
-  {white_list, black_list, destination, compile, to_filename, relativePath, callback, filenamesOnly, priority, freshen, reprocess, binary } = options
 
-  # template.directory.filename() vs template['directory/filename']
+module.exports = loaddir = (options = {}) ->
+
+  # We do defaults on the options object because it will be passed recursively
   options.as_object ?= false
   options.recursive ?= true
   options.to_filename ?= _to_filename
   options.require ?= false
+  options.relativePath ?= ''
 
-  as_object = options.as_object
-  recursive = options.recursive
+  # Then we pull everything out
+  {
+    as_object
+    binary
+    black_list
+    callback
+    compile
+    destination
+    filenamesOnly
+    freshen
+    on_change
+    path
+    recursive
+    relativePath
+    repeat_callback
+    require: requireFiles #require is reserved
+    to_filename
+    white_list
+  } = options
 
-  path = options.path
+  output = {}
 
-  on_change = options.on_change
-
-  destination = options.destination
-
-  compile = options.compile
-
-  callback = options.callback
-
-  to_filename = options.to_filename
-
-  requireFiles = options.require
-
-  #   filenamesOnly
-  #
-  # if output should be formatted using only the lowest level filenames
-
-  args = arguments[0]
-
-  relativePath ?= ''
-  _xp = {}
-
-  # all paths should be the same -- no ending slash
+  # strip ending slash for consistency
   path = path.slice 0, -1 if '/' is _.last path
 
-  _changedTimes = {}
-
+  # the wholeProcess may be repeated again if a new file is created in a dir
   _.each fs.readdirSync(path), (fileName)-> do wholeProcess = (again = false) =>
       
     return if black_list and _.include black_list, fileName
@@ -57,51 +53,46 @@ module.exports = loadDir = (options = {}) ->
 
     fullPath = "#{path}/#{fileName}"
     
-    _destDir = destination + '/' + (relativePath ? '')
+    destDir = destination + '/' + (relativePath ? '')
 
     stats = fs.lstatSync( fullPath )
-    _fileTime = stats.ctime.getTime()
-    if _changedTimes[fullPath] is _fileTime
-      console.log 'returning'
-      return 
-    _changedTimes[fullPath] = _fileTime
 
     if stats.isDirectory()
 
       # we ensure a folder to write to
       if destination
         try
-          fs.lstatSync _destDir + '/' + fileName
-          #console.log "-rf #{_destDir}#{fileName}/*"
+          fs.lstatSync destDir + '/' + fileName
+          #console.log "-rf #{destDir}#{fileName}/*"
           if again
-            child.exec "rm -rf #{_destDir}#{fileName}/*", =>
+            child.exec "rm -rf #{destDir}#{fileName}/*", =>
               console.log 'DELETED', arguments...
           
         catch er
-          fs.mkdirSync _destDir + '/' + fileName
+          fs.mkdirSync destDir + '/' + fileName
 
       fs.watch fullPath, => wholeProcess true
 
       if recursive
-        loadedChildren = loadDir _.extend _.clone(args),
+        loadedChildren = loaddir _.extend _.clone(options),
             path: fullPath
             white_list: false
             relativePath: (relativePath ? '') + fileName + '/'
         if as_object
-          _xp[trimmedFN] = _.extend _xp[trimmedFN] ?{}, loadedChildren
+          output[trimmedFN] = _.extend output[trimmedFN] ?{}, loadedChildren
         else
-          _xp = _.extend loadedChildren, _xp
+          output = _.extend loadedChildren, output
       return
 
-    if on_change or freshen or reprocess then _.defer =>
+    if on_change or freshen or repeat_callback then _.defer =>
 
       # without a delay sometimes with long files it won't pick up the entire file
       fs.watch fullPath, => _.delay( =>
 
-        loadDir.restartServer() if on_change is 'restart'
+        loaddir.restartServer() if on_change is 'restart'
 
         console.log 'recompilin'
-        if reprocess
+        if repeat_callback
           console.log 'refreshen'
           readFile?()
           process?(true)
@@ -115,11 +106,11 @@ module.exports = loadDir = (options = {}) ->
       , 250)
 
     # We break the compiler alot
-    #console.log 'loadDir 120', fullPath, fileName
+    #console.log 'loaddir 120', fullPath, fileName
 
     # Get file and compile
     compiled = ''
-    return _xp[trimmedFN] = {} if filenamesOnly
+    return output[trimmedFN] = {} if filenamesOnly
 
     image_formats = ['png', 'jpg', 'gif', 'jpeg']
     binary ?= if (_ image_formats).include(extension(fullPath).toLowerCase()) then 'binary'
@@ -128,10 +119,10 @@ module.exports = loadDir = (options = {}) ->
       contents = fs.readFileSync(fullPath, binary).toString()
       compiled = compile?(contents, fullPath) ? contents
 
-    # Callback for all args and data
+    # Callback for all options and data
     if _.isFunction callback
-      do process = (reloaded = false) =>
-        compiled = callback _.extend _.clone(args), {compiled, relativePath, fileName, fullPath, reloaded}
+      do process = (repeat = false) =>
+        compiled = callback _.extend _.clone(options), {compiled, relativePath, fileName, fullPath, repeat}
 
     if requireFiles
       try
@@ -140,7 +131,7 @@ module.exports = loadDir = (options = {}) ->
         _.defer => require fullPath
 
     formatted_filename = to_filename trimmedFN, extension fileName
-    _changedFileName = _destDir + formatted_filename
+    _changedFileName = destDir + formatted_filename
 
     if destination?
 
@@ -149,13 +140,14 @@ module.exports = loadDir = (options = {}) ->
 
     do addToObject = =>
       if as_object?
-        _xp[(relativePath ? '') + formatted_filename] = compiled
+        output[(relativePath ? '') + formatted_filename] = compiled
       else
-        _xp[formatted_filename] = _.extend compiled, _xp[formatted_filename]
+        output[formatted_filename] = _.extend compiled, output[formatted_filename]
 
-  _xp
+  return output
 
-loadDir.restartServer = ->
-  fs.writeFileSync 'loadDir_tmp_restart.txt', Math.random()
-  require 'loadDir_tmp_restart.txt'
-  fs.writeFileSync 'loadDir_tmp_restart.txt', Math.random()
+# Note untested
+loaddir.restartServer = ->
+  fs.writeFileSync 'loaddir_tmp_restart.txt', Math.random()
+  require './loaddir_tmp_restart'
+  fs.writeFileSync 'loaddir_tmp_restart.txt', Math.random()

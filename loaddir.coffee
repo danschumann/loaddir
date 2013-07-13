@@ -26,6 +26,7 @@ module.exports = loaddir = (options = {}) ->
     callback
     compile
     destination
+    extension: _to_ext
     filenamesOnly
     freshen
     on_change
@@ -133,7 +134,7 @@ module.exports = loaddir = (options = {}) ->
       catch er
         _.defer => require fullPath
 
-    formatted_filename = to_filename trimmedFN, extension fileName
+    formatted_filename = to_filename trimmedFN, _to_ext || extension fileName
     _changedFileName = destDir + formatted_filename
 
     if destination?

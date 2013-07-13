@@ -61,14 +61,6 @@ a list of filenames to halt on
 `white_list : [](array of strings)`
 a list of __top level__ files that are to be used exclusively
 
-INTERNAL NOTES
-==============
-
-`loadDir.restartServer()`
-this is somewhat hacky, used by `loadDir({on_change: 'restart'})`
-it writes a file `loadDir_tmp.txt`,  requires it and then writes it again, so whether using forever, supervisor, node-dev, or something else, it should restart the server.
-when loadDir is first loaded, it checks for the file and deletes it, to hopefully keep it from being seen
-
 
 
 

@@ -42,8 +42,8 @@ module.exports = loaddir = (options = {}) ->
 
   output = {}
 
-  if _to_ext and _to_ext[0] isnt '.'
-    _to_ext = '.' + _to_ext
+  if _to_ext and _to_ext[0] is '.'
+    _to_ext = _to_ext.substring 1
 
   # strip ending slash for consistency
   path = path.slice 0, -1 if '/' is _.last path
@@ -147,9 +147,9 @@ module.exports = loaddir = (options = {}) ->
 
     do addToObject = =>
       if as_object
-        output[formatted_filename] = _.extend compiled, output[formatted_filename]
+        output[trimmedFN] = _.extend compiled, output[trimmedFN]
       else
-        output[(relativePath ? '') + formatted_filename] = compiled
+        output[(relativePath ? '') + trimmedFN] = compiled
 
   return output
 

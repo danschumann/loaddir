@@ -16,6 +16,7 @@ module.exports = loaddir = (options = {}) ->
   options.to_filename ?= _to_filename
   options.require ?= false
   options.relativePath ?= ''
+  options.watch ?= true
 
   # Then we pull everything out
   {
@@ -34,6 +35,7 @@ module.exports = loaddir = (options = {}) ->
     repeat_callback
     require: requireFiles #require is reserved
     to_filename
+    watch
     white_list
   } = options
 
@@ -71,7 +73,8 @@ module.exports = loaddir = (options = {}) ->
         catch er
           fs.mkdirSync destDir + '/' + fileName
 
-      fs.watch fullPath, => wholeProcess true
+      if on_change or freshen or repeat_callback then _.defer =>
+        fs.watch fullPath, => wholeProcess true
 
       if recursive
         loadedChildren = loaddir _.extend _.clone(options),

@@ -42,6 +42,9 @@ module.exports = loaddir = (options = {}) ->
 
   output = {}
 
+  if _to_ext[0] isnt '.'
+    _to_ext = '.' + _to_ext
+
   # strip ending slash for consistency
   path = path.slice 0, -1 if '/' is _.last path
 

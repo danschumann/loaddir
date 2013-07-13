@@ -85,12 +85,27 @@ loaddir = require('loaddir');
 jade = require('jade');
 
 templates = loaddir({
-  as_object: true
-  path: __dirname + '/templates'
-  compile: (str) ->
-    jade.compile str
+  as_object: true,
+  path: __dirname + '/templates',
+  compile: function(str){
+    jade.compile(str);
+  }
 });
 
 // for use with express?
 app.get('*', function(req, res, next) { res.send(template.my_filename(req)); });
+```
+
+
+in coffeescript:
+```coffeescript
+loaddir = require 'loaddir'
+CoffeeScript = require 'coffee-script'
+
+# compile assets to public for express to serve
+loaddir
+  path: __dirname + '/frontend/coffeescripts',
+  destination: __dirname + '/public/javascripts'
+  compile: (rawFile, fullPath) -> CoffeeScript.compile rawFile
+  to_filename: (trimmedFn, original_extension) -> trimmedFn + '.js'
 ```

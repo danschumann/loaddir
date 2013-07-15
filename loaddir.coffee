@@ -77,7 +77,7 @@ module.exports = loaddir = (options = {}) ->
         catch er
           fs.mkdirSync destDir + '/' + fileName
 
-      if on_change or freshen or repeat_callback then _.defer =>
+      if (on_change or freshen or repeat_callback) and not again then _.defer =>
         fs.watch fullPath, => wholeProcess true
 
       if recursive
@@ -85,16 +85,18 @@ module.exports = loaddir = (options = {}) ->
             path: fullPath
             white_list: false
             relativePath: (relativePath ? '') + fileName + '/'
+            again: again
         if as_object
           output[trimmedFN] = _.extend output[trimmedFN] ?{}, loadedChildren
         else
           output = _.extend loadedChildren, output
       return
 
-    if on_change or freshen or repeat_callback then _.defer =>
+    if (on_change or freshen or repeat_callback) and not again then _.defer =>
 
       # without a delay sometimes with long files it won't pick up the entire file
       fs.watch fullPath, => _.delay( =>
+        console.log {fileName}
 
         loaddir.restartServer() if on_change is 'restart'
 

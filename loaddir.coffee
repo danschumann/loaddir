@@ -20,6 +20,7 @@ module.exports = loaddir = (options = {}) ->
 
   # Then we pull everything out
   {
+    again
     as_object
     binary
     black_list
@@ -49,7 +50,7 @@ module.exports = loaddir = (options = {}) ->
   path = path.slice 0, -1 if '/' is _.last path
 
   # the wholeProcess may be repeated again if a new file is created in a dir
-  _.each fs.readdirSync(path), (fileName)-> do wholeProcess = (again = false) =>
+  _.each fs.readdirSync(path), (fileName)-> do wholeProcess = (_again = false) =>
       
     return if black_list and _.include black_list, fileName
     return if white_list and !_.include white_list, fileName
@@ -70,14 +71,14 @@ module.exports = loaddir = (options = {}) ->
         try
           fs.lstatSync destDir + '/' + fileName
           #console.log "-rf #{destDir}#{fileName}/*"
-          if again
+          if _again
             child.exec "rm -rf #{destDir}#{fileName}/*", =>
               console.log 'DELETED', arguments...
           
         catch er
           fs.mkdirSync destDir + '/' + fileName
 
-      if (on_change or freshen or repeat_callback) and not again then _.defer =>
+      if (on_change or freshen or repeat_callback) and not _again then _.defer =>
         fs.watch fullPath, => wholeProcess true
 
       if recursive
@@ -85,7 +86,7 @@ module.exports = loaddir = (options = {}) ->
             path: fullPath
             white_list: false
             relativePath: (relativePath ? '') + fileName + '/'
-            again: again
+            again: _again
         if as_object
           output[trimmedFN] = _.extend output[trimmedFN] ?{}, loadedChildren
         else

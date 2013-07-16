@@ -105,7 +105,7 @@ module.exports = loaddir = (options = {}) ->
         if repeat_callback
           console.log 'refreshen'
           readFile?()
-          process?(true)
+          process?(true) # callback
         if _.isFunction on_change
           on_change?({readFile, recompile, addToObject})
         if freshen
@@ -126,8 +126,11 @@ module.exports = loaddir = (options = {}) ->
     binary ?= if (_ image_formats).include(extension(fullPath).toLowerCase()) then 'binary'
 
     do readFile = =>
-      contents = fs.readFileSync(fullPath, binary).toString()
-      compiled = compile?(contents, fullPath) ? contents
+      try
+        contents = fs.readFileSync(fullPath, binary).toString()
+        compiled = compile?(contents, fullPath) ? contents
+      catch er
+        fs.unwatchFile fullPath
 
     # Callback for all options and data
     if _.isFunction callback

@@ -99,3 +99,12 @@ TODOS
 ====
 
 # Make engine for express
+
+
+
+PATCH NOTES
+===========
+`0.0.21`
+fixed an issue where deleted files were throwing an error to what was watching them
+`0.0.20`
+removed in issue where files were being watched multiple times if a directory had new files being created or destroyed in it(even swp files were breaking it)

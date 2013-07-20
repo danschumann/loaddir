@@ -39,7 +39,10 @@ module.exports = loaddir = (options = {}) ->
     to_filename
     watch
     white_list
+    top_level
   } = options
+
+  top_level ?= true
 
   output = {}
 
@@ -49,115 +52,144 @@ module.exports = loaddir = (options = {}) ->
   # strip ending slash for consistency
   path = path.slice 0, -1 if '/' is _.last path
 
+  if top_level
+    # We move the path up a directory and whitelist only the dir we want, so
+    # that the wholeProcess can happen on the top level directory
+    parent_path = (path.match /.*\//)[0].slice 0, -1
+    dirName = (path.match /\/(?!.*\/).*/)[0].substring 1
+  else
+    parent_path = path
+
+  watched_files = []
+
   # the wholeProcess may be repeated again if a new file is created in a dir
-  _.each fs.readdirSync(path), (fileName)-> do wholeProcess = (_again = false) =>
+  filenames = _.map fs.readdirSync(parent_path), (fileName) ->
+    do wholeProcess = (_again = false) =>
       
-    return if black_list and _.include black_list, fileName
-    return if white_list and !_.include white_list, fileName
-    return if fileName.charAt(0) is '.'
-
-    trimmedFN = trim_ext fileName
-
-    fullPath = "#{path}/#{fileName}"
-    
-    destDir = destination + '/' + (relativePath ? '')
-
-    stats = fs.lstatSync( fullPath )
-
-    if stats.isDirectory()
-
-      # we ensure a folder to write to
-      if destination
-        try
-          fs.lstatSync destDir + '/' + fileName
-          #console.log "-rf #{destDir}#{fileName}/*"
-          if _again
-            child.exec "rm -rf #{destDir}#{fileName}/*", =>
-              console.log 'DELETED', arguments...
-          
-        catch er
-          fs.mkdirSync destDir + '/' + fileName
-
-      if (on_change or freshen or repeat_callback) and not _again then _.defer =>
-        fs.watch fullPath, => wholeProcess true
-
-      if recursive
-        loadedChildren = loaddir _.extend _.clone(options),
-            path: fullPath
-            white_list: false
-            relativePath: (relativePath ? '') + fileName + '/'
-            again: _again
-        if as_object
-          output[trimmedFN] = _.extend output[trimmedFN] ?{}, loadedChildren
-        else
-          output = _.extend loadedChildren, output
-      return
-
-    if (on_change or freshen or repeat_callback) and not again then _.defer =>
-
-      # without a delay sometimes with long files it won't pick up the entire file
-      fs.watch fullPath, => _.delay( =>
-        console.log {fileName}
-
-        loaddir.restartServer() if on_change is 'restart'
-
-        console.log 'recompilin'
-        if repeat_callback
-          console.log 'refreshen'
-          readFile?()
-          process?(true) # callback
-        if _.isFunction on_change
-          on_change?({readFile, recompile, addToObject})
-        if freshen
-          console.log 'refreshen'
-          readFile?()
-          recompile?()
-          addToObject?()
-      , 250)
-
-    # We break the compiler alot
-    #console.log 'loaddir 120', fullPath, fileName
-
-    # Get file and compile
-    compiled = ''
-    return output[trimmedFN] = {} if filenamesOnly
-
-    image_formats = ['png', 'jpg', 'gif', 'jpeg']
-    binary ?= if (_ image_formats).include(extension(fullPath).toLowerCase()) then 'binary'
-
-    do readFile = =>
-      try
-        contents = fs.readFileSync(fullPath, binary).toString()
-        compiled = compile?(contents, fullPath) ? contents
-      catch er
-        fs.unwatchFile fullPath
-
-    # Callback for all options and data
-    if _.isFunction callback
-      do process = (repeat = false) =>
-        compiled = callback _.extend _.clone(options), {compiled, relativePath, fileName, fullPath, repeat}
-
-    if requireFiles
-      try
-        require fullPath
-      catch er
-        _.defer => require fullPath
-
-    formatted_filename = to_filename trimmedFN, _to_ext || extension fileName
-    _changedFileName = destDir + formatted_filename
-
-    if destination?
-
-      do recompile = =>
-        fs.writeFileSync _changedFileName, compiled, binary
-
-    do addToObject = =>
-      if as_object
-        output[trimmedFN] = _.extend compiled, output[trimmedFN]
+      if top_level
+        unless dirName is fileName
+          return
       else
-        output[(relativePath ? '') + trimmedFN] = compiled
+        return if white_list and !_.include white_list, fileName
+        return if black_list and _.include black_list, fileName
 
-  return output
+      return if fileName.charAt(0) is '.'
+
+      trimmedFN = trim_ext fileName
+
+      fullPath = "#{parent_path}/#{fileName}"
+      
+      destDir = destination + '/' + (relativePath ? '')
+
+      stats = fs.lstatSync( fullPath )
+
+      if stats.isDirectory()
+
+        # we ensure a folder to write to
+        if destination
+          try
+            fs.lstatSync destDir + '/' + fileName
+            #console.log "-rf #{destDir}#{fileName}/*"
+            if _again
+              child.exec "rm -rf #{destDir}#{fileName}/*", =>
+                console.log 'DELETED', arguments...
+            
+          catch er
+            fs.mkdirSync destDir + '/' + fileName
+
+        if (on_change or freshen or repeat_callback) and not _.include watched_files, fullPath
+          watched_files.push fullPath
+          _.defer =>
+            console.log 'watch ', fullPath
+            fs.watch fullPath, => wholeProcess true
+
+        if recursive
+          loadedChildren = loaddir _.extend _.clone(options),
+              path: fullPath
+              white_list: if top_level then white_list else false
+              black_list: if top_level then black_list else false
+              relativePath: (relativePath ? '') + fileName + '/'
+              again: _again
+              top_level: false
+          if as_object
+            output[trimmedFN] = _.extend output[trimmedFN] ?{}, loadedChildren
+          else
+            output = _.extend loadedChildren, output
+        return
+
+      if (on_change or freshen or repeat_callback) and not _.include watched_files, fullPath
+        watched_files.push fullPath
+        _.defer =>
+          # without a delay sometimes with long files it won't pick up the entire file
+          console.log 'watch ', fullPath
+          fs.watchFile fullPath, => _.delay( =>
+            console.log {fileName}
+
+            loaddir.restartServer() if on_change is 'restart'
+
+            console.log 'recompilin'
+            if repeat_callback
+              console.log 'refreshen'
+              readFile?()
+              process?(true) # callback
+            if _.isFunction on_change
+              on_change?({readFile, recompile, addToObject})
+            if freshen
+              console.log 'refreshen'
+              readFile?()
+              recompile?()
+              addToObject?()
+          , 250)
+
+      # We break the compiler alot
+      #console.log 'loaddir 120', fullPath, fileName
+
+      # Get file and compile
+      compiled = ''
+      return output[trimmedFN] = {} if filenamesOnly
+
+      image_formats = ['png', 'jpg', 'gif', 'jpeg']
+      binary ?= if (_ image_formats).include(extension(fullPath).toLowerCase()) then 'binary'
+
+      do readFile = =>
+        try
+          contents = fs.readFileSync(fullPath, binary).toString()
+          compiled = compile?(contents, fullPath) ? contents
+        catch er
+          console.log 'unwatch ', fullPath
+          watched_files = _.without watched_files, fullPath
+          fs.unwatchFile fullPath
+
+      # Callback for all options and data
+      if _.isFunction callback
+        do process = (repeat = false) =>
+          compiled = callback _.extend _.clone(options), {compiled, relativePath, fileName, fullPath, repeat}
+
+      if requireFiles
+        try
+          require fullPath
+        catch er
+          _.defer => require fullPath
+
+      formatted_filename = to_filename trimmedFN, _to_ext || extension fileName
+      _changedFileName = destDir + formatted_filename
+
+      if destination?
+
+        do recompile = =>
+          fs.writeFileSync _changedFileName, compiled, binary
+
+      do addToObject = =>
+        if as_object
+          output[trimmedFN] = _.extend compiled, output[trimmedFN]
+        else
+          output[(relativePath ? '') + trimmedFN] = compiled
+    fileName
+
+  if top_level
+    return output[dirName]
+  else
+    return output
 
 # Note untested
 loaddir.restartServer = ->

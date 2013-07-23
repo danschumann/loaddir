@@ -108,7 +108,7 @@ module.exports = loaddir = (options = {}) ->
               path: fullPath
               white_list: if top_level then white_list else false
               black_list: if top_level then black_list else false
-              relativePath: (relativePath ? '') + fileName + '/'
+              relativePath: if top_level then relativePath else (relativePath ? '') + fileName + '/'
               again: _again
               top_level: false
           if as_object
@@ -167,9 +167,11 @@ module.exports = loaddir = (options = {}) ->
 
       if requireFiles
         try
-          require fullPath
+          _required = require fullPath
         catch er
-          _.defer => require fullPath
+          _.defer =>
+            _required = require fullPath
+            addToObject()
 
       formatted_filename = to_filename trimmedFN, _to_ext || extension fileName
       _changedFileName = destDir + formatted_filename
@@ -181,12 +183,12 @@ module.exports = loaddir = (options = {}) ->
 
       do addToObject = =>
         if as_object
-          output[trimmedFN] = _.extend compiled, output[trimmedFN]
+          output[trimmedFN] = _.extend (_required ? compiled), output[trimmedFN]
         else
-          output[(relativePath ? '') + trimmedFN] = compiled
+          output[(relativePath ? '') + trimmedFN] = _required ? compiled
     fileName
 
-  if top_level
+  if top_level and as_object
     return output[dirName]
   else
     return output

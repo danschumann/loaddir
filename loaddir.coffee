@@ -7,7 +7,6 @@ CoffeeScript = require 'coffee-script'
 # by default, we do not change the extension when copying
 _to_filename = (filename, ext) -> return [filename, ext].join('.')
 
-
 module.exports = loaddir = (options = {}) ->
 
   # We do defaults on the options object because it will be passed recursively
@@ -60,8 +59,6 @@ module.exports = loaddir = (options = {}) ->
   else
     parent_path = path
 
-  watched_files = []
-
   # the wholeProcess may be repeated again if a new file is created in a dir
   filenames = _.map fs.readdirSync(parent_path), (fileName) ->
     do wholeProcess = (_again = false) =>
@@ -97,11 +94,12 @@ module.exports = loaddir = (options = {}) ->
           catch er
             fs.mkdirSync destDir + '/' + fileName
 
-        if (on_change or freshen or repeat_callback) and not _.include watched_files, fullPath
-          watched_files.push fullPath
-          _.defer =>
-            console.log 'watch ', fullPath
-            fs.watch fullPath, => wholeProcess true
+        if (on_change or freshen or repeat_callback) and not _.include loaddir.watched_files, fullPath
+          if watch isnt false and watch isnt 'files'
+            loaddir.watched_files.push fullPath
+            _.defer =>
+              console.log 'watch ', fullPath
+              fs.watch fullPath, => wholeProcess true
 
         if recursive
           loadedChildren = loaddir _.extend _.clone(options),
@@ -117,29 +115,30 @@ module.exports = loaddir = (options = {}) ->
             output = _.extend loadedChildren, output
         return
 
-      if (on_change or freshen or repeat_callback) and not _.include watched_files, fullPath
-        watched_files.push fullPath
-        _.defer =>
-          # without a delay sometimes with long files it won't pick up the entire file
-          console.log 'watch ', fullPath
-          fs.watchFile fullPath, => _.delay( =>
-            console.log {fileName}
+      if (on_change or freshen or repeat_callback) and not _.include loaddir.watched_files, fullPath
+        if watch isnt false
+          loaddir.watched_files.push fullPath
+          _.defer =>
+            # without a delay sometimes with long files it won't pick up the entire file
+            console.log 'watch ', fullPath
+            fs.watchFile fullPath, => _.delay( =>
+              console.log {fileName}
 
-            loaddir.restartServer() if on_change is 'restart'
+              loaddir.restartServer() if on_change is 'restart'
 
-            console.log 'recompilin'
-            if repeat_callback
-              console.log 'refreshen'
-              readFile?()
-              process?(true) # callback
-            if _.isFunction on_change
-              on_change?({readFile, recompile, addToObject})
-            if freshen
-              console.log 'refreshen'
-              readFile?()
-              recompile?()
-              addToObject?()
-          , 250)
+              console.log 'recompilin'
+              if repeat_callback
+                console.log 'refreshen'
+                readFile?()
+                process?(true) # callback
+              if _.isFunction on_change
+                on_change?({readFile, recompile, addToObject})
+              if freshen
+                console.log 'refreshen'
+                readFile?()
+                recompile?()
+                addToObject?()
+            , 250)
 
       # We break the compiler alot
       #console.log 'loaddir 120', fullPath, fileName
@@ -157,7 +156,7 @@ module.exports = loaddir = (options = {}) ->
           compiled = compile?(contents, fullPath) ? contents
         catch er
           console.log 'unwatch ', fullPath
-          watched_files = _.without watched_files, fullPath
+          loaddir.watched_files = _.without loaddir.watched_files, fullPath
           fs.unwatchFile fullPath
 
       # Callback for all options and data
@@ -198,3 +197,6 @@ loaddir.restartServer = ->
   fs.writeFileSync 'loaddir_tmp_restart.txt', Math.random()
   require './loaddir_tmp_restart'
   fs.writeFileSync 'loaddir_tmp_restart.txt', Math.random()
+
+loaddir.watched_files = []
+

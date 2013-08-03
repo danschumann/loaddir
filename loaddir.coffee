@@ -97,9 +97,16 @@ module.exports = loaddir = (options = {}) ->
         if (on_change or freshen or repeat_callback) and not _.include loaddir.watched_files, fullPath
           if watch isnt false and watch isnt 'files'
             loaddir.watched_files.push fullPath
+            contentsBefore = JSON.stringify fs.readdirSync fullPath
             _.defer =>
               console.log 'watch ', fullPath
-              fs.watch fullPath, => wholeProcess true
+              watched = fs.watch fullPath, =>
+                console.log 'dir changed..?', contentsBefore,
+                  contentsAfter = JSON.stringify fs.readdirSync fullPath
+                if contentsBefore isnt contentsAfter
+                  loaddir.watched_files = _.without loaddir.watched_files, fullPath
+                  watched.close()
+                  wholeProcess true
 
         if recursive
           loadedChildren = loaddir _.extend _.clone(options),
@@ -115,13 +122,14 @@ module.exports = loaddir = (options = {}) ->
             output = _.extend loadedChildren, output
         return
 
+      fileWatcher = undefined
       if (on_change or freshen or repeat_callback) and not _.include loaddir.watched_files, fullPath
         if watch isnt false
           loaddir.watched_files.push fullPath
           _.defer =>
             # without a delay sometimes with long files it won't pick up the entire file
             console.log 'watch ', fullPath
-            fs.watchFile fullPath, => _.delay( =>
+            fileWatcher = fs.watch fullPath, => _.delay( =>
               console.log {fileName}
 
               loaddir.restartServer() if on_change is 'restart'
@@ -138,7 +146,7 @@ module.exports = loaddir = (options = {}) ->
                 readFile?()
                 recompile?()
                 addToObject?()
-            , 250)
+            , 10)
 
       # We break the compiler alot
       #console.log 'loaddir 120', fullPath, fileName
@@ -157,7 +165,7 @@ module.exports = loaddir = (options = {}) ->
         catch er
           console.log 'unwatch ', fullPath
           loaddir.watched_files = _.without loaddir.watched_files, fullPath
-          fs.unwatchFile fullPath
+          fileWatcher.close()
 
       # Callback for all options and data
       if _.isFunction callback

@@ -1,7 +1,7 @@
 (function() {
 
   div(function() {
-    return 'hello coffee';
+    return 'hello changed!';
   });
 
 }).call(this);

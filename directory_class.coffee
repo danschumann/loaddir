@@ -39,12 +39,12 @@ class Directory extends FileSystemItemAbstract
 
     if @top or @recursive
       @process()
-      @start_watching()
 
   process: ->
     console.log 'Directory::process'.yellow, @path.green if @options.debug
     @readdirResults = fs.readdirSync @path
     _.map @readdirResults, @processChild
+    @start_watching()
 
   # Loop through all files and load them as well
   processChild: (fileName) =>
@@ -52,6 +52,7 @@ class Directory extends FileSystemItemAbstract
 
     path = @path + '/' + fileName
     baseName = @trim_ext fileName
+
 
     return if @children[path]
     return if @white_list and !_.include @white_list, fileName
@@ -98,11 +99,7 @@ class Directory extends FileSystemItemAbstract
   watchHandler: =>
 
     console.log 'Directory::watchHandler'.yellow, @options.path.green if @options.debug
-    folderContentsAfter = JSON.stringify fs.readdirSync @path
-    console.log @folderContentsBefore.red, folderContentsAfter.green
-    if @folderContentsBefore isnt folderContentsAfter
-      @process()
-      @folderContentsBefore = folderContentsAfter
+    @process()
 
   unwatch: -> @fileWatcher?.close()
 

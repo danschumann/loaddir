@@ -29,7 +29,6 @@ class File extends FileSystemItemAbstract
       @binary ?= then 'binary'
 
     @process()
-    @start_watching()
 
   read: ->
     try
@@ -40,16 +39,12 @@ class File extends FileSystemItemAbstract
 
       if _.contains(@watched_list, @path)
         @watched_list.splice _.indexOf(@watched_list, @path), 1
-      console.log 'asdf'
 
       if _.contains(@file_watchers, @fileWatcher)
         @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
-      console.log 'asdf', @key, @output
-      delete @options.parent[@path]
+      delete @options.parent.children[@path]
       delete @output[@key]
-      console.log 'asdf'.blue
       @fileWatcher?.close()
-      console.log 'asdf'.green
       false
 
   process: ->
@@ -72,8 +67,8 @@ class File extends FileSystemItemAbstract
 
     # We wrap our fileContents with the filename for consistency
     @key = (if @as_object then '' else @relativePath) + @baseName
-    console.log @key
     @output[@key] = @fileContents
+    @start_watching()
 
   unwatch: ->
     @fileWatcher?.close()

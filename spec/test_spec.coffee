@@ -110,14 +110,33 @@ describe 'LOADDIR', ->
         @loaddir_result.new_file == CoffeScript.compile FILE
       , "it didn't change when we changed the file", 2000
 
+      deleted_another = false
       runs =>
-        console.log 'does this run?'
-        exec "rm #{__dirname}/sample_path/Another_file.coffee", => console.log 'RUNS?'
+        console.log 'removing another_file'.red
+        exec "rm #{__dirname}/sample_path/Another_file.coffee", =>
+          deleted_another = true
+          console.log 'RUNS?'
 
       waitsFor =>
-        console.log 'huh?', not @loaddir_result.Another_file
-        not @loaddir_result.Another_file
+        deleted_another and not @loaddir_result.Another_file
       , "it to realize we erased a file", 2000
+
+      runs =>
+        console.log 'adding back another_file'.green
+        _.defer => fs.writeFileSync __dirname + '/sample_path/Another_file.coffee', ANOTHER
+
+      waitsFor =>
+        #console.log @loaddir_result.Another_file
+        @loaddir_result.Another_file == CoffeScript.compile ANOTHER
+      , 'it realize we added the file back', 2000
+
+      runs =>
+        console.log 'updating another_file'.yellow
+        fs.writeFileSync __dirname + '/sample_path/Another_file.coffee', CHANGED_FILE
+
+      waitsFor =>
+        @loaddir_result.Another_file == CoffeScript.compile CHANGED_FILE
+      , 'it to successfully watch the file even though its been added recently', 2000
 
       console.log 'WRITING'
 

@@ -1,8 +1,7 @@
 fs = require 'fs'
+_ = require 'underscore'
 
-class FileSystemItemAbstract
-
-  watch: true
+class FileSystemItemAbstract extends Object
 
   get_extension: (str) ->
     str.substring( (str.lastIndexOf('.') + 1) || str.length )
@@ -13,26 +12,32 @@ class FileSystemItemAbstract
 
   constructor: (@options) ->
 
-    console.log @options.path if @options.debug
+    @options.to_filename ?= @to_filename
 
     {
-
-      @path
+      @as_object
+      @binary
+      @black_list
+      @callback
+      @compile
+      @baseName
       @destination
-
+      @extension
+      @fileName
+      @on_change
+      @path
       @recursive
       @relativePath
-
-      @watched_list
-      @on_change
-      @freshen
       @repeat_callback
-
-      @as_object
-      @filenamesOnly
-
+      @require
+      @to_filename
+      @watch
+      @watch_handler
+      @watched_list
+      @file_watchers
+      @output
     } = @options
-
+    super
 
   # Some options should not be passed down
   extractSingleUseOptions: ->

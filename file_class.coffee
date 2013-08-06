@@ -1,6 +1,11 @@
-FileSystemItemAbstract = require './file_system_item_abstract_class'
-Directory = require './directory_class'
 fs = require 'fs'
+_ = require 'underscore'
+
+FileSystemItemAbstract = FileSystemItemAbstract || require './file_system_item_abstract'
+
+Directory = Directory || {}
+
+_.defer => Directory = require './directory_class'
 
 IMAGE_FORMATS = [
   'png'
@@ -17,67 +22,62 @@ class File extends FileSystemItemAbstract
 
   constructor: (@options) ->
 
+    console.log 'File::constructor'.inverse + @options.path.magenta
     super
-    if @filenamesOnly
-      (@output = {})[@path] = (path.match /\/(?!.*\/).*/)[0].substring 1
-      return
 
     if _.include IMAGE_FORMATS, @get_extension(@path).toLowerCase()
       @binary ?= then 'binary'
 
-    @_watch()
     @process()
+    @start_watching()
 
   read: ->
     try
-      @compiled = @contents = fs.readFileSync(@path, @binary).toString()
-      @compiled = @compile.call this if @compile
+      @fileContents = fs.readFileSync(@path, @binary).toString()
     catch er
-      console.log 'unwatch ', @path
 
-      if _.contains(@watched_files, @path)
-        @watched_files.splice _.indexOf(@watched_files, @path), 1
+      if _.contains(@watched_list, @path)
+        @watched_list.splice _.indexOf(@watched_list, @path), 1
+
+      if _.contains(@file_watchers, @fileWatcher)
+        @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
       @fileWatcher?.close()
 
   process: ->
 
-    @output = @callback?() # callback
-
-    if requireFiles
+    console.log 'File::process'.inverse + @path.magenta
+    if @require
       try
-        @output = require @path
+        @fileContents = require @path
       catch er
         _.defer =>
-          @output = require @path
-          addToObject()
+          @fileContents = require @path
+    else
+      @read()
+      @fileContents = @compile.call this if @compile
+      @fileContents = @callback() if @callback
+
+    if @destination
+      fileName = @to_filename @baseName, @extension || @get_extension @fileName
+      fs.writeFileSync @destination, @fileContents, @binary
+
+    # We wrap our fileContents with the filename for consistency
+    key = (if @as_object then '' else @relativePath) + @baseName
+    @output[key] = @fileContents
 
   unwatch: ->
     @fileWatcher?.close()
 
-  _watch: ->
-    return if not (@watch_handler or @freshen or @repeat_callback) or
-      @watch is false or _.include(@watched_list, @path)
+  start_watching: ->
+    return if @watch is false or _.include(@watched_list, @path)
+    console.log 'start_watching'.cyan + @path.magenta if @options.debug
 
     @watched_list.push @path
+    @file_watchers.push @fileWatcher = fs.watch @path, @watchHandler
 
-    _.defer =>
-      @fileWatcher = fs.watch @path, @_watch_handler
+  watchHandler: =>
 
-  _watch_handler: =>
-    console.log 'file watch changed: ', arguments...
-
-    if _.isFunction @watch_handler
-      @watch_handler?({@read, @recompile, @addToObject})
-
-    if @repeat_callback
-      console.log 'repeat callback'
-      @read?()
-      @callback?(true) # callback
-
-    if @freshen
-      console.log 'freshen'
-      @readFile?()
-      @recompile?()
-      @addToObject?()
+    console.log 'watchHandler'.cyan + @path.magenta if @options.debug
+    @process()
 
 module.exports = File

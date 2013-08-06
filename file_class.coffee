@@ -54,8 +54,8 @@ class File extends FileSystemItemAbstract
           @fileContents = require @path
     else
       @read()
-      @fileContents = @compile.call this if @compile
-      @fileContents = @callback() if @callback
+      @fileContents = @compile(this) if @compile
+      @fileContents = @callback(this) if @callback
 
     if @destination
       fileName = @to_filename @baseName, @extension || @get_extension @fileName

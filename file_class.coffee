@@ -31,6 +31,7 @@ class File extends FileSystemItemAbstract
     @process()
 
   read: ->
+    console.log 'File::read'.inverse, @path.magenta
     try
       @fileContents = fs.readFileSync(@path, @binary).toString()
       true
@@ -40,11 +41,12 @@ class File extends FileSystemItemAbstract
       if _.contains(@watched_list, @path)
         @watched_list.splice _.indexOf(@watched_list, @path), 1
 
-      if _.contains(@file_watchers, @fileWatcher)
-        @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
+      #if _.contains(@file_watchers, @fileWatcher)
+      #  @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
       delete @options.parent.children[@path]
       delete @output[@key]
-      @fileWatcher?.close()
+      fs.unwatchFile @path
+      #@fileWatcher?.close()
       false
 
   process: ->
@@ -70,15 +72,14 @@ class File extends FileSystemItemAbstract
     @output[@key] = @fileContents
     @start_watching()
 
-  unwatch: ->
-    @fileWatcher?.close()
 
   start_watching: ->
     return if @watch is false or _.include(@watched_list, @path)
     console.log 'File::start_watching'.inverse + @options.path.magenta if @options.debug
 
     @watched_list.push @path
-    @file_watchers.push @fileWatcher = fs.watch @path, @watchHandler
+    #@file_watchers.push @fileWatcher =
+    fs.watchFile @path, @watchHandler
 
   watchHandler: =>
 

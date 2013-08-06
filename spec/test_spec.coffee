@@ -119,7 +119,7 @@ describe 'LOADDIR', ->
 
       waitsFor =>
         deleted_another and not @loaddir_result.Another_file
-      , "it to realize we erased a file", 2000
+      , "it to realize we erased a file", 10000
 
       runs =>
         console.log 'adding back another_file'.green
@@ -136,7 +136,7 @@ describe 'LOADDIR', ->
 
       waitsFor =>
         @loaddir_result.Another_file == CoffeScript.compile CHANGED_FILE
-      , 'it to successfully watch the file even though its been added recently', 2000
+      , 'it to successfully watch the file even though its been added recently', 10000
 
       console.log 'WRITING'
 

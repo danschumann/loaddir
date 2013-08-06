@@ -19,14 +19,15 @@ describe 'LOADDIR', ->
   beforeEach ->
     console.log __dirname
 
-    # Setup Test Files
-    fs.writeFileSync __dirname + '/sample_path/file.coffee', FILE
-    fs.writeFileSync __dirname + '/sample_path/Another_file.coffee', ANOTHER
-    fs.writeFileSync __dirname + '/sample_path/subfolder/inner_file.coffee', INNER
-
-    # Clear destination
-    exec "rm -rf #{__dirname}/sample_destination/*", (=> @deleted = true)
+    # Clear Folders
+    exec "rm -rf #{__dirname}/sample_destination/*; rm -rf #{__dirname}/sample_path/*; mkdir #{__dirname}/sample_path/subfolder", (=> @deleted = true)
     waitsFor (=> @deleted == true), 'Could not delete', 10000
+
+    runs =>
+      # Refill
+      fs.writeFileSync __dirname + '/sample_path/file.coffee', FILE
+      fs.writeFileSync __dirname + '/sample_path/Another_file.coffee', ANOTHER
+      fs.writeFileSync __dirname + '/sample_path/subfolder/inner_file.coffee', INNER
 
   it 'has long keys', ->
 
@@ -55,7 +56,7 @@ describe 'LOADDIR', ->
       subfolder:
         inner_file: INNER
 
-  it 'can copy to a destination', ->
+  it 'can copy to a destination with a different extension', ->
 
     expect((fs.readdirSync DESTINATION).length).toBeFalsy()
 
@@ -63,18 +64,19 @@ describe 'LOADDIR', ->
       as_object: true
       path: PATH
       destination: DESTINATION
+      extension: 'js'
       watch: false
       debug: true
     console.log @loaddir_result
 
     expect(fs.readdirSync DESTINATION).toEqual [
-      'Another_file.coffee'
-      'file.coffee'
+      'Another_file.js'
+      'file.js'
       'subfolder'
     ]
 
     expect(fs.readdirSync DESTINATION + '/subfolder').toEqual [
-      'inner_file.coffee'
+      'inner_file.js'
     ]
 
     expect(@loaddir_result).toEqual
@@ -100,13 +102,28 @@ describe 'LOADDIR', ->
         Another_file: CoffeScript.compile ANOTHER
         'subfolder/inner_file': CoffeScript.compile INNER
 
-      waitsFor =>
-        #console.log @loaddir_result
-        @loaddir_result.file == CoffeScript.compile CHANGED_FILE
-      , "it didn't change when we changed the file", 2000
-      console.log 'WRITING'
       fs.writeFileSync __dirname + '/sample_path/file.coffee', CHANGED_FILE
+      fs.writeFileSync __dirname + '/sample_path/new_file.coffee', FILE
+      waitsFor =>
+        #console.log @loaddir_result.new_file
+        @loaddir_result.file == CoffeScript.compile CHANGED_FILE
+        @loaddir_result.new_file == CoffeScript.compile FILE
+      , "it didn't change when we changed the file", 2000
+
+      runs =>
+        console.log 'does this run?'
+        exec "rm #{__dirname}/sample_path/Another_file.coffee", => console.log 'RUNS?'
+
+      waitsFor =>
+        console.log 'huh?', not @loaddir_result.Another_file
+        not @loaddir_result.Another_file
+      , "it to realize we erased a file", 2000
+
+      console.log 'WRITING'
 
     it 'updates the file system as well', ->
       read_file = expect (fs.readFileSync DESTINATION + '/file.coffee').toString()
       read_file.toBe CoffeScript.compile CHANGED_FILE
+
+      read_file = expect (fs.readFileSync DESTINATION + '/new_file.coffee').toString()
+      read_file.toBe CoffeScript.compile FILE

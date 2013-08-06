@@ -22,7 +22,7 @@ class File extends FileSystemItemAbstract
 
   constructor: (@options) ->
 
-    console.log 'File::constructor'.inverse + @options.path.magenta
+    console.log 'File::constructor'.inverse + @options.path.magenta if @options.debug
     super
 
     if _.include IMAGE_FORMATS, @get_extension(@path).toLowerCase()
@@ -34,18 +34,27 @@ class File extends FileSystemItemAbstract
   read: ->
     try
       @fileContents = fs.readFileSync(@path, @binary).toString()
+      true
     catch er
+      console.log "Could not read, file erased?".red
 
       if _.contains(@watched_list, @path)
         @watched_list.splice _.indexOf(@watched_list, @path), 1
+      console.log 'asdf'
 
       if _.contains(@file_watchers, @fileWatcher)
         @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
+      console.log 'asdf', @key, @output
+      delete @options.parent[@path]
+      delete @output[@key]
+      console.log 'asdf'.blue
       @fileWatcher?.close()
+      console.log 'asdf'.green
+      false
 
   process: ->
 
-    console.log 'File::process'.inverse + @path.magenta
+    console.log 'File::process'.inverse + @path.magenta if @options.debug
     if @require
       try
         @fileContents = require @path
@@ -53,31 +62,32 @@ class File extends FileSystemItemAbstract
         _.defer =>
           @fileContents = require @path
     else
-      @read()
+      return if @read() is false
       @fileContents = @compile(this) if @compile
       @fileContents = @callback(this) if @callback
 
     if @destination
-      fileName = @to_filename @baseName, @extension || @get_extension @fileName
-      fs.writeFileSync @destination, @fileContents, @binary
+      write_path = @to_filename @trim_ext(@destination), @extension || @get_extension @fileName
+      fs.writeFileSync write_path, @fileContents, @binary
 
     # We wrap our fileContents with the filename for consistency
-    key = (if @as_object then '' else @relativePath) + @baseName
-    @output[key] = @fileContents
+    @key = (if @as_object then '' else @relativePath) + @baseName
+    console.log @key
+    @output[@key] = @fileContents
 
   unwatch: ->
     @fileWatcher?.close()
 
   start_watching: ->
     return if @watch is false or _.include(@watched_list, @path)
-    console.log 'start_watching'.cyan + @path.magenta if @options.debug
+    console.log 'File::start_watching'.inverse + @options.path.magenta if @options.debug
 
     @watched_list.push @path
     @file_watchers.push @fileWatcher = fs.watch @path, @watchHandler
 
   watchHandler: =>
 
-    console.log 'watchHandler'.cyan + @path.magenta if @options.debug
+    console.log 'File::watchHandler'.inverse + @options.path.magenta if @options.debug
     @process()
 
 module.exports = File

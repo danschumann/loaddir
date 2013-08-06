@@ -38,8 +38,8 @@ class Directory extends FileSystemItemAbstract
         fs.mkdirSync @destination
 
     if @top or @recursive
-      @start_watching()
       @process()
+      @start_watching()
 
   process: ->
     console.log 'Directory::process'.yellow, @path.green if @options.debug
@@ -50,16 +50,18 @@ class Directory extends FileSystemItemAbstract
   processChild: (fileName) =>
     console.log 'Directory::processChild'.yellow, fileName.green if @options.debug
 
+    path = @path + '/' + fileName
+    baseName = @trim_ext fileName
+
+    return if @children[path]
     return if @white_list and !_.include @white_list, fileName
     return if @black_list and _.include @black_list, fileName
     return if fileName.charAt(0) is '.'
 
-    path = @path + '/' + fileName
-    baseName = @trim_ext fileName
-
     options = _.extend (_.clone @options),
       path: path
       fileName: fileName
+      parent: this
       destination: if @destination then @destination + '/' + fileName
       children: if @options.exposed_hooks is 'array' or !@as_object then @children
       relativePath: @relativePath
@@ -87,18 +89,20 @@ class Directory extends FileSystemItemAbstract
 
   start_watching: ->
     return if @watch is false or @watch is 'files' or _.include(@watched_list, @path)
+    console.log 'Directory::start_watching'.yellow, @options.path.green if @options.debug
 
     @watched_list.push @path
-    folderContentsBefore = JSON.stringify @readdirResults
-    _.defer =>
-      @file_watchers.push @fileWatcher = fs.watch @path, @watchHandler
+    @folderContentsBefore = JSON.stringify @readdirResults
+    @file_watchers.push @fileWatcher = fs.watch @path, @watchHandler
 
   watchHandler: =>
 
-    console.log 'Directory::watchHandler', arguments...
+    console.log 'Directory::watchHandler'.yellow, @options.path.green if @options.debug
     folderContentsAfter = JSON.stringify fs.readdirSync @path
-    @process() if folderContentsBefore isnt folderContentsAfter
-    @restart() if @watch_handler is 'restart'
+    console.log @folderContentsBefore.red, folderContentsAfter.green
+    if @folderContentsBefore isnt folderContentsAfter
+      @process()
+      @folderContentsBefore = folderContentsAfter
 
   unwatch: -> @fileWatcher?.close()
 

@@ -17,6 +17,7 @@ IMAGE_FORMATS = [
 class File extends FileSystemItemAbstract
 
   require: false
+  is_file: true
 
   to_filename: (filename, ext) -> filename + '.' + ext
 

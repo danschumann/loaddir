@@ -35,7 +35,7 @@ describe 'LOADDIR', ->
       debug: true
       path: PATH
       watch: false
-    console.log @loaddir_result
+    #console.log @loaddir_result
 
     expect(@loaddir_result).toEqual
       file: FILE
@@ -48,7 +48,7 @@ describe 'LOADDIR', ->
       as_object: true
       path: PATH
       watch: false
-    console.log @loaddir_result
+    #console.log @loaddir_result
 
     expect(@loaddir_result).toEqual
       file: FILE
@@ -67,7 +67,7 @@ describe 'LOADDIR', ->
       extension: 'js'
       watch: false
       debug: true
-    console.log @loaddir_result
+    #console.log @loaddir_result
 
     expect(fs.readdirSync DESTINATION).toEqual [
       'Another_file.js'
@@ -86,6 +86,15 @@ describe 'LOADDIR', ->
         inner_file: INNER
 
   describe 'can watch files and compress them', ->
+
+    afterEach ->
+      do unwatchInstance = (instance = @loaddir_instance) =>
+        if instance.is_file
+          fs.unwatchFile instance.path
+        else
+          instance.fileWatcher.close()
+
+      _.each @loaddir_instance.children, unwatchInstance
 
     beforeEach ->
       {output: @loaddir_result}  = @loaddir_instance = loaddir

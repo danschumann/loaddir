@@ -9,6 +9,7 @@ File = require './file_class'
 class Directory extends FileSystemItemAbstract
 
   as_object: false
+  is_directory: true
   recursive: true
 
   constructor: (@options) ->

@@ -60,8 +60,14 @@ class File extends FileSystemItemAbstract
           @fileContents = require @path
     else
       return if @read() is false
-      @fileContents = @compile(this) if @compile
-      @fileContents = @callback(this) if @callback
+      try
+        @fileContents = @compile(this) if @compile
+      catch er
+        console.log "We had an error compiling".red, er, @path
+      try
+        @fileContents = @callback(this) if @callback
+      catch er
+        console.log "We had an error calling back".red, er, @path
 
     if @destination
       write_path = @to_filename @trim_ext(@destination), @extension || @get_extension @fileName

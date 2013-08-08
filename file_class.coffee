@@ -42,12 +42,14 @@ class File extends FileSystemItemAbstract
       if _.contains(@watched_list, @path)
         @watched_list.splice _.indexOf(@watched_list, @path), 1
 
-      #if _.contains(@file_watchers, @fileWatcher)
-      #  @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
       delete @options.parent.children[@path]
       delete @output[@key]
-      fs.unwatchFile @path
-      #@fileWatcher?.close()
+      if @fast_watch
+        if _.contains(@file_watchers, @fileWatcher)
+          @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
+        @fileWatcher?.close()
+      else
+        fs.unwatchFile @path
       false
 
   process: ->
@@ -85,8 +87,10 @@ class File extends FileSystemItemAbstract
     console.log 'File::start_watching'.inverse + @options.path.magenta if @options.debug
 
     @watched_list.push @path
-    #@file_watchers.push @fileWatcher =
-    fs.watchFile @path, @watchHandler
+    if @fast_watch
+      @file_watchers.push @fileWatcher = fs.watch @path, @watchHandler
+    else
+      fs.watchFile @path, @watchHandler
 
   watchHandler: =>
 

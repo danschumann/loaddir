@@ -23,6 +23,7 @@ class FileSystemItemAbstract extends Object
       @baseName
       @destination
       @extension
+      @fast_watch
       @fileName
       @on_change
       @path

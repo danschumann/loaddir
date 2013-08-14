@@ -27,12 +27,12 @@ class File extends FileSystemItemAbstract
     super
 
     if _.include IMAGE_FORMATS, @get_extension(@path).toLowerCase()
-      @binary ?= then 'binary'
+      @binary ?= 'binary'
 
     @process()
 
   read: ->
-    console.log 'File::read'.inverse, @path.magenta
+    console.log 'File::read'.inverse, @path.magenta if @options.debug
     try
       @fileContents = fs.readFileSync(@path, @binary).toString()
       true

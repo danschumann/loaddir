@@ -43,7 +43,23 @@ class Directory extends FileSystemItemAbstract
 
   process: ->
     console.log 'Directory::process'.yellow, @path.green if @options.debug
-    @readdirResults = fs.readdirSync @path
+
+    try
+      @readdirResults = fs.readdirSync @path
+    catch er
+      console.log 'Directory:: DELETED?'.red
+      if _.contains(@watched_list, @path)
+        @watched_list.splice _.indexOf(@watched_list, @path), 1
+      delete @options.parent.output[@baseName] if @as_object
+      delete @options.parent.children[@path]
+      if @fast_watch
+        if _.contains(@file_watchers, @fileWatcher)
+          @file_watchers.splice _.indexOf(@file_watchers, @fileWatcher), 1
+        @fileWatcher?.close()
+      else
+        fs.unwatchFile @path
+      return false
+
     _.map @readdirResults, @processChild
     @start_watching()
 

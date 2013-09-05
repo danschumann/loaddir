@@ -17,8 +17,10 @@ describe 'LOADDIR', ->
   DESTINATION = __dirname + '/sample_destination'
 
   beforeEach ->
+    console.log 'BEFORE EACH, DELETE!'.red
     console.log __dirname
 
+    @deleted = false
     # Clear Folders
     exec "rm -rf #{__dirname}/sample_destination/*; rm -rf #{__dirname}/sample_path/*; mkdir #{__dirname}/sample_path/subfolder", (=> @deleted = true)
     waitsFor (=> @deleted == true), 'Could not delete', 10000
@@ -32,7 +34,7 @@ describe 'LOADDIR', ->
   it 'has long keys', ->
 
     @loaddir_result = loaddir
-      debug: true
+      #debug: true
       path: PATH
       watch: false
     #console.log @loaddir_result
@@ -56,34 +58,73 @@ describe 'LOADDIR', ->
       subfolder:
         inner_file: INNER
 
-  it 'can copy to a destination with a different extension', ->
+  describe 'can copy to a destination with a different extension', ->
+    beforeEach ->
+      waitsFor ->
+        @deleted ==true
+      , 'deleted dest', 10000
 
-    expect((fs.readdirSync DESTINATION).length).toBeFalsy()
+    it 'can copy to a destination w/ a different extension', ->
 
-    @loaddir_result = loaddir
-      as_object: true
-      path: PATH
-      destination: DESTINATION
-      extension: 'js'
-      watch: false
-      debug: true
-    #console.log @loaddir_result
+      console.log 'can copy to a destination witha  diff ext'.yellow
+      expect((fs.readdirSync DESTINATION).length).toBeFalsy()
 
-    expect(fs.readdirSync DESTINATION).toEqual [
-      'Another_file.js'
-      'file.js'
-      'subfolder'
-    ]
+      @loaddir_result = loaddir
+        as_object: true
+        path: PATH
+        destination: DESTINATION
+        extension: 'js'
+        watch: false
+        #debug: true
+      #console.log @loaddir_result
 
-    expect(fs.readdirSync DESTINATION + '/subfolder').toEqual [
-      'inner_file.js'
-    ]
+      expect(fs.readdirSync DESTINATION).toEqual [
+        'Another_file.js'
+        'file.js'
+        'subfolder'
+      ]
 
-    expect(@loaddir_result).toEqual
-      file: FILE
-      Another_file: ANOTHER
-      subfolder:
-        inner_file: INNER
+      expect(fs.readdirSync DESTINATION + '/subfolder').toEqual [
+        'inner_file.js'
+      ]
+
+      expect(@loaddir_result).toEqual
+        file: FILE
+        Another_file: ANOTHER
+        subfolder:
+          inner_file: INNER
+
+  describe 'adding and removing directories', ->
+    beforeEach ->
+      @loaddir_result = loaddir
+        as_object: true
+        path: PATH
+        destination: DESTINATION
+        extension: 'js'
+        watch: true
+        #debug: true
+
+      runs =>
+        console.log 'add directory'.yellow
+        fs.mkdirSync __dirname + '/sample_path/new_dir'
+        fs.writeFileSync __dirname + '/sample_path/new_dir/meh_file', CHANGED_FILE
+
+      waitsFor =>
+        @loaddir_result.new_dir?
+      , 'added the new directory', 10000
+
+      runs =>
+        console.log 'remove directory'.red
+        exec "rm -rf #{__dirname}/sample_path/new_dir", =>
+          deleted_another = true
+          console.log 'RUNS?'
+
+      waitsFor =>
+        !@loaddir_result.new_dir?
+      , 'erased the new directory', 10000
+
+    it 'worked without erroring', ->
+      expect(true).toBeTruthy()
 
   describe 'can watch files and compress them', ->
 
@@ -98,7 +139,7 @@ describe 'LOADDIR', ->
 
     beforeEach ->
       {output: @loaddir_result}  = @loaddir_instance = loaddir
-        debug: true
+        #debug: true
         path: PATH
         expose_hooks: 'array'
         destination: DESTINATION
@@ -146,6 +187,25 @@ describe 'LOADDIR', ->
       waitsFor =>
         @loaddir_result.Another_file == CoffeScript.compile CHANGED_FILE
       , 'it to successfully watch the file even though its been added recently', 10000
+
+      runs =>
+        console.log 'add directory'.yellow
+        fs.mkdirSync __dirname + '/sample_path/new_dir'
+        fs.writeFileSync __dirname + '/sample_path/new_dir/meh_file', CHANGED_FILE
+
+      waitsFor =>
+        @loaddir_result['new_dir/meh_file']?
+      , 'added the new directory', 10000
+
+      runs =>
+        console.log 'add directory'.yellow
+        exec "rm -r #{__dirname}/sample_path/new_dir", =>
+          deleted_another = true
+          console.log 'RUNS?'
+
+      waitsFor =>
+        !@loaddir_result['new_dir/meh_file']?
+      , 'erased the new directory', 10000
 
       console.log 'WRITING'
 

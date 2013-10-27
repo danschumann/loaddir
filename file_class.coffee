@@ -95,6 +95,8 @@ class File extends FileSystemItemAbstract
   watchHandler: =>
 
     console.log 'File::watchHandler'.inverse + @options.path.magenta if @options.debug
-    @process()
+
+    # Delay so that hopefully the file is done being written to disk -- longer files may need more
+    _.delay => @process(), @options.read_delay ? 500
 
 module.exports = File

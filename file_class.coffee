@@ -23,6 +23,8 @@ class File extends FileSystemItemAbstract
 
   constructor: (@options) ->
 
+    # debounce so that hopefully the file is done being written to disk -- longer files may need more
+    _.debounce @watchHandler, 500
     console.log 'File::constructor'.inverse + @options.path.magenta if @options.debug
     super
 
@@ -96,7 +98,6 @@ class File extends FileSystemItemAbstract
 
     console.log 'File::watchHandler'.inverse + @options.path.magenta if @options.debug
 
-    # Delay so that hopefully the file is done being written to disk -- longer files may need more
-    _.delay (=> @process()), @options.read_delay ? 500
+    @process()
 
 module.exports = File

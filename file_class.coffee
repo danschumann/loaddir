@@ -60,9 +60,6 @@ class File extends FileSystemItemAbstract
     if @require
       try
         @fileContents = require @path
-      catch er
-        _.defer =>
-          @fileContents = require @path
     else
       return if @read() is false
       try

@@ -24,7 +24,7 @@ class File extends FileSystemItemAbstract
   constructor: (@options) ->
 
     # debounce so that hopefully the file is done being written to disk -- longer files may need more
-    _.debounce @watchHandler, 500
+    @watchHandler = _.debounce @watchHandler, 500
     console.log 'File::constructor'.inverse + @options.path.magenta if @options.debug
     super
 

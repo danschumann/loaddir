@@ -58,8 +58,7 @@ class File extends FileSystemItemAbstract
 
     console.log 'File::process'.inverse + @path.magenta if @options.debug
     if @require
-      try
-        @fileContents = require @path
+      @fileContents = require @path
     else
       return if @read() is false
       try

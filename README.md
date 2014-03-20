@@ -16,16 +16,20 @@ jade = require('jade');
 loaddir({
   as_object: true,
   path: __dirname + '/templates',
+  
+  // compile runs before callback
   compile: function(fileContents){
   
     // this == loaddir file instance
-  
+    
+    // this.fileContents == fileContents
+   
+    // the return becomes the new fileContents
     return jade.compile(fileContents);
   },
   callback: function(thisContext){
    
-    // thisContext == this
-    // this == loaddir file instance
+    // thisContext == this == loaddir file instance
     
     // compile and callback are similar with different args
     return this.fileContents.replace(/__hostname/g, 'http://google.com');

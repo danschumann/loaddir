@@ -4,7 +4,7 @@ var
   child         = require('child_process'),
   CoffeeScript  = require('coffee-script'),
   extension     = require('./string_helper').extension,
-  trim_ext      = require('./string_helper').trim_ext,
+  trim_ext      = require('./string_helper').trim_ext
   ;
 
 require('colors');
@@ -16,8 +16,8 @@ module.exports = function(options) {
   var 
 
     // Defined here so we can require this file for app-wide settings like debug
-    File          = require('./file_class.coffee'),
-    Directory     = require('./directory_class.coffee'),
+    File          = require('./lib/file'),
+    Directory     = require('./lib/directory'),
 
     directory;
 

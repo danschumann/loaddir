@@ -27,9 +27,12 @@ loaddir({
     // thisContext == this
     // this == loaddir file instance
     
-    // compile and callback are essencially the same thing
+    // compile and callback are similar with different args
     return this.fileContents.replace(/__hostname/g, 'http://google.com');
-  }
+  },
+  // This is default
+  // watch: true
+  // compile / callback will be called again when file changes
 }).then(function(templates) {
 
   // { account: {index: ..., change_password: ...}, index: ... }

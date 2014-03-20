@@ -2,7 +2,7 @@
   "author": "Daniel Hastings Schumann",
   "name": "loaddir",
   "description": "Asset watching, handling, compiling, and insertion into page for node.js",
-  "version": "0.2.18",
+  "version": "1.0.0",
   "repository": {
     "url": "https://github.com/danschumann/loaddir"
   },
@@ -11,7 +11,8 @@
     "underscore": ">=1.5.1",
     "colors": "0.6.1",
     "coffee-script": "*",
-    "final-fs": "^1.6.0"
+    "final-fs": "^1.6.0",
+    "when": "^3.0.0"
   },
   "devDependencies": {
     "jasmine-node": "*"

@@ -2,7 +2,7 @@
   "author": "Daniel Hastings Schumann",
   "name": "loaddir",
   "description": "Asset watching, handling, compiling, and insertion into page for node.js",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "repository": {
     "url": "https://github.com/danschumann/loaddir"
   },

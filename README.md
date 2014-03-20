@@ -1,7 +1,7 @@
 loaddir.js
 ==========
 
-Asset watching, handling, compiling, and insertion into page for node.js
+Asset watching, handling, and compiling for node.js
 
 To install run `npm install loaddir`
 

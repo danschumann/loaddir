@@ -6,11 +6,12 @@
   "repository": {
     "url": "https://github.com/danschumann/loaddir"
   },
-  "main": "./loaddir",
+  "main": "./index",
   "dependencies": {
     "underscore": ">=1.5.1",
     "colors": "0.6.1",
-    "coffee-script": "*"
+    "coffee-script": "*",
+    "final-fs": "^1.6.0"
   },
   "devDependencies": {
     "jasmine-node": "*"

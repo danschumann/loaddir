@@ -14,7 +14,7 @@ loaddir = require('loaddir');
 jade = require('jade');
 
 loaddir({
-  as_object: true,
+  asObject: true,
   path: __dirname + '/templates',
   
   // compile runs before callback

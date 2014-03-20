@@ -2,9 +2,7 @@ var
   _             = require('underscore'),
   fs            = require('fs'),
   child         = require('child_process'),
-  CoffeeScript  = require('coffee-script'),
-  extension     = require('./string_helper').extension,
-  trim_ext      = require('./string_helper').trim_ext
+  CoffeeScript  = require('coffee-script')
   ;
 
 require('colors');

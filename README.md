@@ -45,6 +45,8 @@ loaddir({
 
 ```
 
+`callback` will be ran each time the file changes, keeping the returned `templates` object updated.
+
 
 PATCH NOTES
 ===========

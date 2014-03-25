@@ -24,7 +24,7 @@ loaddir({
   // returns recursive objects { full : { path : { to : 'fileContents' } } }
   asObject: true,
   
-    path: __dirname + '/templates',
+  path: __dirname + '/templates',
   
   // compile runs before callback
   compile: function(fileContents){

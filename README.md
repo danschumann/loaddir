@@ -14,7 +14,14 @@ loaddir = require('loaddir');
 jade = require('jade');
 
 loaddir({
+
+  // defaults
+  //
+  // watch: true
+  // compile / callback will be called again when file changes
+  
   asObject: true,
+  
   path: __dirname + '/templates',
   
   // compile runs before callback
@@ -34,9 +41,7 @@ loaddir({
     // compile and callback are similar with different args
     return this.fileContents.replace(/__hostname/g, 'http://google.com');
   },
-  // This is default
-  // watch: true
-  // compile / callback will be called again when file changes
+
 }).then(function(templates) {
 
   // { account: {index: ..., change_password: ...}, index: ... }

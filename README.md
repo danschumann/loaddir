@@ -46,8 +46,7 @@ loaddir({
 
 }).then(function(templates) {
 
-  // { account: {index: ..., change_password: ...}, index: ... }
-  // ... is the return of compile
+  // templates == { account: {index: ..., change_password: ...}, index: ... }
 });
 
 ```

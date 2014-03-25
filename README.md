@@ -20,9 +20,11 @@ loaddir({
   // watch: true
   // compile / callback will be called again when file changes
   
+  // instead of { 'full/path/to' : 'fileContents' }
+  // returns recursive objects { full : { path : { to : 'fileContents' } } }
   asObject: true,
   
-  path: __dirname + '/templates',
+    path: __dirname + '/templates',
   
   // compile runs before callback
   compile: function(fileContents){

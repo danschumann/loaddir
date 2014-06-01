@@ -3,6 +3,8 @@ var
   fs            = require('fs'),
   child         = require('child_process'),
   CoffeeScript  = require('coffee-script')
+  File          = require('./lib/file'),
+  Directory     = require('./lib/directory')
   ;
 
 require('colors');
@@ -11,13 +13,7 @@ require('colors');
 //   options to compile
 module.exports = function(options) {
 
-  var 
-
-    // Defined here so we can require this file for app-wide settings like debug
-    File          = require('./lib/file'),
-    Directory     = require('./lib/directory'),
-
-    directory;
+  var directory;
 
   options = options || {};
 
@@ -44,3 +40,7 @@ module.exports = function(options) {
   return (new Directory(options)).process();
 
 };
+
+module.exports.File = File;
+module.exports.Directory = Directory;
+File.prototype.loaddir = Directory.prototype.loaddir = module.exports;

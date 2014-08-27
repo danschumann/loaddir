@@ -2,10 +2,9 @@ var
   _             = require('underscore'),
   fs            = require('fs'),
   child         = require('child_process'),
-  CoffeeScript  = require('coffee-script')
+  CoffeeScript  = require('coffee-script'),
   File          = require('./lib/file'),
-  Directory     = require('./lib/directory')
-  ;
+  Directory     = require('./lib/directory');
 
 require('colors');
 

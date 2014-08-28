@@ -42,4 +42,6 @@ module.exports = function(options) {
 
 module.exports.File = File;
 module.exports.Directory = Directory;
+
+// Save a reference to loaddir for testing loaddir options
 File.prototype.loaddir = Directory.prototype.loaddir = module.exports;

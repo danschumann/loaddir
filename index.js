@@ -38,14 +38,16 @@ var loaddir = function(options) {
 
   return when().then(function(){
     if (options.manifest)
-      return fs.readFile(options.manifest)
+      return fs.exists(options.manifest);
+  }).then(function(exists){
+    if (exists)
+      return fs.readFile(options.manifest);
   }).then(function(manifest){
 
     if (manifest) {
       manifest = JSON.parse(manifest)
       console.log('MANFIFESTOTOTOOTTOTO'.zebra, manifest);
     }
-    options.manifest = manifest;
 
     // returns Promise
     var dir = new Directory(options)
@@ -60,7 +62,8 @@ var loaddir = function(options) {
 
         if (options.require) throw new Error('Cannot build a manifest for directly required files');
 
-        console.log(dir.buildManifest());
+        //console.log(dir.buildManifest(), 'ham', options.manifest);
+        console.log('hamsdfajsldkfjasldfsdlf'.red, options.manifest);
         fs.writeFile(options.manifest, JSON.stringify(dir.buildManifest(), null, '  '));
 
       }

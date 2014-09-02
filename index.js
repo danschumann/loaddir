@@ -37,15 +37,19 @@ var loaddir = function(options) {
   options.output = {};
 
   return when().then(function(){
-    if (options.manifest)
+    if (options.manifest) {
+      if (options.manifest.substring(options.manifest.length - 5) !== '.json')
+        options.manifest += '.json';
       return fs.exists(options.manifest);
+    }
   }).then(function(exists){
     if (exists)
       return fs.readFile(options.manifest);
   }).then(function(manifest){
 
     if (manifest) {
-      manifest = JSON.parse(manifest)
+      try { manifest = JSON.parse(manifest) }
+      catch(er) { manifest = undefined; }
     }
 
     options.existingManifest = manifest;
@@ -69,7 +73,7 @@ var loaddir = function(options) {
       return options.output;
 
     }).otherwise(function(er){
-      console.log("dohh?".red, (er + '').red, er.stack);
+      console.log("loaddir error: ".blue, (er + '').red, er.stack);
     });
   });
 

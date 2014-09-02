@@ -49,7 +49,10 @@ var loaddir = function(options) {
 
     if (manifest) {
       try { manifest = JSON.parse(manifest) }
-      catch(er) { manifest = undefined; }
+      catch(er) {
+        console.log('error parsing manifest'.red, 'This just means you restarted the server at an awkward time, unless it happens consistently', er, er.stack);
+        manifest = undefined;
+      }
     }
 
     options.existingManifest = manifest;

@@ -30,6 +30,9 @@ var loaddir = function(options) {
   if ('/' === _.last(options.path))
     options.path = options.path.slice(0, -1);
 
+  if (!options.path)
+    throw new Error('loaddir: You must supply a path');
+
   // HACK: first run through uses black list and other features
   options.top = true;
 

@@ -44,8 +44,7 @@ loaddir({
 
 ###Options
 
-#####
-watch
+#####watch
 defaults to `true`. `compile` and `callback` will be ran each time the file changes, keeping the returned `templates` object updated.
 
 

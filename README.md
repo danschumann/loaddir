@@ -32,6 +32,9 @@ loaddir({
 }).then(function(templates) {
 
   var outputSTR = templates.myFileName();
+  
+  //or since we did `asObject`
+  var otherSTR = templates.myDirectory.subFile()
 });
 
 ```

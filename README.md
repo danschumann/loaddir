@@ -42,7 +42,11 @@ loaddir({
 
 ```
 
-Unless `watch: false` is passed, `compile` and `callback` will be ran each time the file changes, keeping the returned `templates` object updated.
+###Options
+
+#####
+watch
+defaults to `true`. `compile` and `callback` will be ran each time the file changes, keeping the returned `templates` object updated.
 
 
 PATCH NOTES

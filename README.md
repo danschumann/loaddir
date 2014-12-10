@@ -17,16 +17,16 @@ loaddir({
 
   // outputs directories as subObjects, names are filenames
   asObject: true,
-  
+
   path: __dirname + '/templates',
-  
+
   // Runs 1st
-  compile: function(fileContents) {
+  compile: function() {
     this.fileContents = jade.compile(fileContents);
   },
   // Runs 2nd
-  callback: function(thisContext){
-    this.fileContents = this.fileContents.replace(/__hostname/g, 'http://google.com');
+  callback: function(){
+    console.log('Something loaded!', this.filePath);
   },
 
 }).then(function(templates) {

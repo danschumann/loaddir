@@ -33,8 +33,11 @@ loaddir({
 
   var outputSTR = templates.myFileName();
   
-  //or since we did `asObject`
+  //or since we did `asObject`, directories are sub objects
   var otherSTR = templates.myDirectory.subFile()
+  
+  // not using `asObject`  would look like this
+  // var otherSTR = templates['myDirectory/subFile']()
 });
 
 ```

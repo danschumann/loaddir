@@ -15,38 +15,23 @@ jade = require('jade');
 
 loaddir({
 
-  // defaults
-  //
-  // watch: true
-  // compile / callback will be called again when file changes
-  
-  // instead of { 'full/path/to' : 'fileContents' }
-  // returns recursive objects { full : { path : { to : 'fileContents' } } }
+  // outputs directories as subObjects, names are filenames
   asObject: true,
   
   path: __dirname + '/templates',
   
-  // compile runs before callback
-  compile: function(fileContents){
-  
-    // this == loaddir file instance
-    
-    // this.fileContents == fileContents
-   
-    // the return becomes the new fileContents
-    return jade.compile(fileContents);
+  // Runs 1st
+  compile: function(fileContents) {
+    this.fileContents = jade.compile(fileContents);
   },
+  // Runs 2nd
   callback: function(thisContext){
-   
-    // thisContext == this == loaddir file instance
-    
-    // compile and callback are similar with different args
-    return this.fileContents.replace(/__hostname/g, 'http://google.com');
+    this.fileContents = this.fileContents.replace(/__hostname/g, 'http://google.com');
   },
 
 }).then(function(templates) {
 
-  // templates == { account: {index: ..., change_password: ...}, index: ... }
+  var outputSTR = templates.myFileName();
 });
 
 ```

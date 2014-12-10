@@ -5,8 +5,8 @@ Asset watching, handling, and compiling for node.js
 To install run `npm install loaddir`
 
 =============
-##Example
 
+##Example
 
 ```javascript
 // load server side templates into object for use: template.index()

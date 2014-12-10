@@ -1,12 +1,12 @@
-loaddir.js
-==========
+#loaddir.js
 
 Asset watching, handling, and compiling for node.js
 
 To install run `npm install loaddir`
 
-Some examples
 =============
+##Example
+
 
 ```javascript
 // load server side templates into object for use: template.index()

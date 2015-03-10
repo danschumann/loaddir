@@ -7,6 +7,7 @@ var
   child         = require('child_process'),
   CoffeeScript  = require('coffee-script'),
   File          = require('./lib/file'),
+  debug         = require('debug')('loaddir'),
   Directory     = require('./lib/directory');
 
 require('colors');
@@ -15,6 +16,7 @@ require('colors');
 //   options to compile
 var loaddir = function(options) {
 
+  debug("NEW LOADDIR".green, options);
   var directory;
 
   options = options ? _.clone(options) : {};

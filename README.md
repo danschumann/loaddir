@@ -1,12 +1,12 @@
-loaddir.js
-==========
+#loaddir.js
 
 Asset watching, handling, and compiling for node.js
 
 To install run `npm install loaddir`
 
-Some examples
 =============
+
+##Example
 
 ```javascript
 // load server side templates into object for use: template.index()
@@ -15,43 +15,37 @@ jade = require('jade');
 
 loaddir({
 
-  // defaults
-  //
-  // watch: true
-  // compile / callback will be called again when file changes
-  
-  // instead of { 'full/path/to' : 'fileContents' }
-  // returns recursive objects { full : { path : { to : 'fileContents' } } }
+  // outputs directories as subObjects, names are filenames
   asObject: true,
-  
+
   path: __dirname + '/templates',
-  
-  // compile runs before callback
-  compile: function(fileContents){
-  
-    // this == loaddir file instance
-    
-    // this.fileContents == fileContents
-   
-    // the return becomes the new fileContents
-    return jade.compile(fileContents);
+
+  // Runs 1st
+  compile: function() {
+    this.fileContents = jade.compile(fileContents);
   },
-  callback: function(thisContext){
-   
-    // thisContext == this == loaddir file instance
-    
-    // compile and callback are similar with different args
-    return this.fileContents.replace(/__hostname/g, 'http://google.com');
+  // Runs 2nd
+  callback: function(){
+    console.log('Something loaded!', this.filePath);
   },
 
 }).then(function(templates) {
 
-  // templates == { account: {index: ..., change_password: ...}, index: ... }
+  var outputSTR = templates.myFileName();
+  
+  // since we did `asObject`, directories are sub objects
+  var otherSTR = templates.myDirectory.subFile()
+  
+  // not using `asObject`  would look like this
+  // var otherSTR = templates['myDirectory/subFile']()
 });
 
 ```
 
-`callback` will be ran each time the file changes, keeping the returned `templates` object updated.
+###Options
+
+#####watch
+defaults to `true`. `compile` and `callback` will be ran each time the file changes, keeping the returned `templates` object updated.
 
 
 PATCH NOTES

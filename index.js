@@ -87,8 +87,10 @@ var loaddir = function(options) {
 
 };
 
-module.exports.File = File;
-module.exports.Directory = Directory;
+loaddir.File = File;
+loaddir.Directory = Directory;
+
+require('./lib/require')(loaddir);
 
 // Save a reference to loaddir for testing loaddir options
 File.prototype.loaddir = Directory.prototype.loaddir = loaddir;

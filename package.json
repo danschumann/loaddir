@@ -8,12 +8,13 @@
   },
   "main": "./index",
   "dependencies": {
-    "underscore": ">=1.5.1",
+    "callsite": "^1.0.0",
+    "coffee-script": "^1.9.1",
     "colors": "0.6.1",
-    "coffee-script": "*",
+    "debug": "^0.8.1",
     "final-fs": "^1.6.0",
-    "when": "^3.0.0",
-    "debug": "^0.8.1"
+    "underscore": ">=1.5.1",
+    "when": "^3.0.0"
   },
   "devDependencies": {
     "jasmine-node": "*"
